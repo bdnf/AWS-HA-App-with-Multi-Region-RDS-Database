@@ -1,0 +1,69 @@
+MySQL [udacity]> INSERT INTO udacity.tasks(task_id, title)
+    -> VALUES (4, "Fourth Task"), (5, "Fifth Task");
+ERROR 1290 (HY000): The MySQL server is running with the --read-only option so it cannot execute this statement
+MySQL [udacity]> SELECT * FROM tasks;
++---------+-------------+
+| task_id | title       |
++---------+-------------+
+|       1 | First Task  |
+|       2 | Second Task |
+|       3 | Third Task  |
++---------+-------------+
+3 rows in set (0.00 sec)
+
+MySQL [udacity]> 
+MySQL [udacity]> 
+MySQL [udacity]> 
+MySQL [udacity]> 
+MySQL [udacity]> # after promoting RR it seems that even connection has not been lost
+MySQL [udacity]> 
+MySQL [udacity]> SELECT * FROM tasks;
+ERROR 2006 (HY000): MySQL server has gone away
+No connection. Trying to reconnect...
+Connection id:    5
+Current database: udacity
+
++---------+-------------+
+| task_id | title       |
++---------+-------------+
+|       1 | First Task  |
+|       2 | Second Task |
+|       3 | Third Task  |
++---------+-------------+
+3 rows in set (0.02 sec)
+
+MySQL [udacity]> INSERT INTO udacity.tasks(task_id, title) VALUES (4, "Fourth Task"), (5, "Fifth Task");
+Query OK, 2 rows affected (0.00 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+MySQL [udacity]> SELECT * FROM tasks;
++---------+-------------+
+| task_id | title       |
++---------+-------------+
+|       1 | First Task  |
+|       2 | Second Task |
+|       3 | Third Task  |
+|       4 | Fourth Task |
+|       5 | Fifth Task  |
++---------+-------------+
+5 rows in set (0.00 sec)
+
+MySQL [udacity]> INSERT INTO udacity.tasks(task_id, title) VALUES (6, "Sixth Task"), (7, "Seventh Task");
+Query OK, 2 rows affected (0.01 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+MySQL [udacity]> SELECT * FROM tasks;
++---------+--------------+
+| task_id | title        |
++---------+--------------+
+|       1 | First Task   |
+|       2 | Second Task  |
+|       3 | Third Task   |
+|       4 | Fourth Task  |
+|       5 | Fifth Task   |
+|       6 | Sixth Task   |
+|       7 | Seventh Task |
++---------+--------------+
+7 rows in set (0.00 sec)
+
+MySQL [udacity]> 

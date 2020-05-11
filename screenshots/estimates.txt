@@ -1,0 +1,30 @@
+# Availability Estimate
+
+RDS takes daily snapshots of the database as well as transactional logs (up to 5 minutes intervals).
+Considering this RTO in Single AZ deployment may vary from from minutes to hours. However using transaction logs - RPO can be minized up to 5 minutes.
+
+In case of outage in Single AZ deployment RDS automatically tries to launch a new instance in the same Availability Zone, attach the EBS volume, and recover.
+In this scenario, RTO is typically under 30 minutes. In this case, RPO is zero because the EBS volume was recovered.
+
+ 
+The RDS Multi-AZ configuration is the recommended approach for production environments due to its ability to support low RTO (recovery time objective) and RPO (recovery point objective) requirements.
+RTO in such case may be less than 10 minutes. In case of Availability Zone failure - DNS endpoint will be switched from failed Primary to a Standby instance. 
+RPO will be the number of lost queries in time between RDS detecting that AZ is down and switching DNS endpoint. If retry is implemented on application side, PRO is negligible as no queries will be lost and application just keeps retrying until query is succeeded.
+
+
+
+## Minimum RTO for a single AZ outage
+
+AZ failures are rare, RTO is under 30 minutes. 
+
+## Minimum RTO for a single region outage
+
+Time of Read Replica in healthy region being promoted to a standalone DB cluster after detecting primary region outage. % minutes or less.
+
+## Minimum RPO for a single AZ outage
+
+0 minutes, as volume is recovered.
+
+## Minimum RPO for a single region outage
+
+Up to 5 minutes as Read Replicas is updated asyncronously and should contain most of the transaction logs from primary.

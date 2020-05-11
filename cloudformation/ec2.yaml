@@ -1,0 +1,107 @@
+---
+Parameters:
+  VPCId:
+    Type: AWS::EC2::VPC::Id
+    Description: Select VPC to deploy instance in
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Select Public Subnet ID to deploy instance in
+  KeyName:
+    Description: Select key to access Bastion host
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: jenkins-server-access
+  BastionAMI:
+    Type: String
+    Default: ami-07ebfd5b3428b6f4d
+    Description: AMI of a bastion host instance to use
+    AllowedValues:  # ubuntu
+      - ami-07ebfd5b3428b6f4d
+      - ami-08bc77a2c7eb2b1da # 16.04
+      - ami-062f7200baf2fa504 # Amazon Linux 2
+  MyIP:
+    Type: String
+    Description: Put you IP address to access bastion host
+    Default: 0.0.0.0/0
+
+Resources:
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      #AvailabilityZone: us-east-1a
+      ImageId: ami-a4c7edb2
+      InstanceType: t2.micro
+      KeyName: !Ref KeyName
+      SecurityGroupIds:
+        - !Ref SSHSecurityGroup
+        - !Ref ServerSecurityGroup
+      SubnetId: !Ref SubnetId
+
+  MyEIP:
+    # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-eip.html
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref MyInstance
+
+  SSHSecurityGroup:
+    # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH access via port 22
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        FromPort: 22
+        IpProtocol: tcp
+        ToPort: 22
+
+  ServerSecurityGroup:
+    # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: allow connections from specified CIDR ranges
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+      # - IpProtocol: tcp
+      #   FromPort: 80
+      #   ToPort: 80
+      #   CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 192.168.1.1/32
+
+  RDSIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+
+  # full access to other ec2 instances
+  RDSAccessIamPolicies:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: fullAccess
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          # - Effect: Allow
+          #   Action: "ec2:*"
+          #   Resource: "*"
+          - Effect: Allow
+            Action: "rds:*"
+            Resource: "*" #"rds:DatabaseName: udacity/*"
+            #   Condition:
+            #     ForAllValues:
+            #       StringEquals:
+            #         rds:DatabaseName: udacity
+
+      Roles:
+        - !Ref RDSIamRole

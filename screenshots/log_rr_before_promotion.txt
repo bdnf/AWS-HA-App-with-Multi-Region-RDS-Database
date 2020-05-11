@@ -1,0 +1,62 @@
+[ec2-user@ip-10-2-11-67 ~]$ mysql -h secondary-region-read-replica.caa8svj9csd6.eu-central-1.rds.amazonaws.com -P 3306  -u admin -p
+Enter password: 
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MySQL connection id is 47
+Server version: 5.7.22 Source distribution
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MySQL [(none)]> SHOW DATABASES;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| innodb             |
+| mysql              |
+| performance_schema |
+| sys                |
+| testdb             |
+| udacity            |
++--------------------+
+7 rows in set (0.01 sec)
+
+MySQL [(none)]> USE UDACITY;
+ERROR 1049 (42000): Unknown database 'UDACITY'
+MySQL [(none)]> USE udacity;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+MySQL [udacity]> SHOW TABLES;
++-------------------+
+| Tables_in_udacity |
++-------------------+
+| tasks             |
++-------------------+
+1 row in set (0.00 sec)
+
+MySQL [udacity]> SELECT * FROM tasks
+    -> ;
++---------+-------------+
+| task_id | title       |
++---------+-------------+
+|       1 | First Task  |
+|       2 | Second Task |
+|       3 | Third Task  |
++---------+-------------+
+3 rows in set (0.00 sec)
+
+MySQL [udacity]> INSERT INTO udacity.tasks(task_id, title)
+    -> VALUES (4, "Fourth Task"), (5, "Fifth Task");
+ERROR 1290 (HY000): The MySQL server is running with the --read-only option so it cannot execute this statement
+MySQL [udacity]> SELECT * FROM tasks;
++---------+-------------+
+| task_id | title       |
++---------+-------------+
+|       1 | First Task  |
+|       2 | Second Task |
+|       3 | Third Task  |
++---------+-------------+
+3 rows in set (0.00 sec)
