@@ -1,0 +1,104 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  # VPCId:
+  #   Type: AWS::EC2::VPC::Id
+  #   Description: Select VPC to deploy instance in
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Select Public Subnet IDs to create DB Subnet Group
+
+  DBName:
+    Default: MyDatabase
+    Description: The database name
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric
+      characters.
+  DBUser:
+    NoEcho: 'true'
+    Description: The database admin account username
+    Type: String
+    MinLength: '1'
+    MaxLength: '16'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric
+      characters.
+  DBPassword:
+    NoEcho: 'true'
+    Description: The database admin account password
+    Type: String
+    MinLength: '8'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+  DBInstanceClass:
+    Default: db.t2.small
+    Description: DB instance class
+    Type: String
+    ConstraintDescription: Must select a valid DB instance type.
+  SourceDBInstanceIdentifier:
+    Type: String
+    Description: DB instance name
+  # SourceRegion:
+  #   Type: String
+
+Resources:
+  MyDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: description
+      SubnetIds: !Ref SubnetIds
+
+  MyDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBName: !Ref 'DBName'
+      AllocatedStorage: '5'
+      DBInstanceClass: !Ref DBInstanceClass
+      Engine: MySQL
+      EngineVersion: 5.7.26
+      MasterUsername: !Ref DBUser
+      MasterUserPassword: !Ref DBPassword
+      DBParameterGroupName: !Ref MyRDSParamGroup
+      SourceDBInstanceIdentifier: !Ref SourceDBInstanceIdentifier
+      #SourceRegion: !Ref SourceRegion
+      MultiAZ: True
+      DBSubnetGroupName: !Ref MyDBSubnetGroup
+
+  MyRDSParamGroup:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      Family: MySQL5.7
+      Description: CloudFormation Sample Database Parameter Group
+      Parameters:
+        autocommit: '1'
+        general_log: '1'
+        old_passwords: '0'
+
+  RDSReadOnlyReplica:
+          Type: "AWS::RDS::DBInstance"
+          Properties:
+            SourceDBInstanceIdentifier: !Ref MyDB
+            DBInstanceClass: !Ref DBInstanceClass
+  #           DBInstanceIdentifier: <identifier>
+  #           DBParameterGroupName:
+  #             Ref: "RDSReadReplicaDBParameterGroup"
+  #           AllocatedStorage: "1000"
+  #           StorageType: "gp2"
+  #           DBInstanceClass: "db.r3.large"
+  #           Engine: "postgres"
+  #           MultiAZ: "True" // (or true)
+  #           VPCSecurityGroups:
+  #             - Ref: "RDSSecurityGroup"
+Outputs:
+  JDBCConnectionString:
+    Description: JDBC connection string for the database
+    Value: !Join ['', ['jdbc:mysql://', !GetAtt [MyDB, Endpoint.Address], ':', !GetAtt [
+          MyDB, Endpoint.Port], /, !Ref 'DBName']]
+  ReplicaJDBCConnectionString:
+    Description: JDBC connection string for the replica database
+    Value: !Join ['', ['jdbc:mysql://', !GetAtt [RDSReadOnlyReplica, Endpoint.Address], ':',
+        !GetAtt [RDSReadOnlyReplica, Endpoint.Port], /, !Ref 'DBName']]
