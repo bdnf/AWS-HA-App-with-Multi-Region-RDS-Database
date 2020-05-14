@@ -1,5 +1,14 @@
 ---
 Parameters:
+  Environment:
+    Description:
+      Please enter an environment resource tag to improve cost and usage reports
+    Type: String
+    Default: Development
+    AllowedValues:
+      - Development
+      - Staging
+      - Production
   VPCId:
     Type: AWS::EC2::VPC::Id
     Description: Select VPC to deploy instance in
@@ -23,24 +32,130 @@ Parameters:
     Description: Put you IP address to access bastion host
     Default: 0.0.0.0/0
 
+Mappings:
+  AWSRegionToAMI:
+    ap-northeast-1:
+      AMI: ami-00d101850e971728d
+    ap-northeast-2:
+      AMI: ami-08ab3f7e72215fe91
+    ap-south-1:
+      AMI: ami-00e782930f1c3dbc7
+    ap-southeast-1:
+      AMI: ami-0b5a47f8865280111
+    ap-southeast-2:
+      AMI: ami-0fb7513bcdc525c3b
+    ap-east-1:
+      AMI: ami-018aec30b63a5a9aa
+    eu-central-1:
+      AMI: ami-0ebe657bc328d4e82
+    eu-west-1:
+      AMI: ami-030dbca661d402413
+    eu-west-2:
+      AMI: ami-0009a33f033d8b7b6
+    eu-west-3:
+      AMI: ami-0ebb3a801d5fb8b9b
+    us-east-1:
+      AMI: ami-0c6b1d09930fac512
+    us-east-2:
+      AMI: ami-0ebbf2179e615c338
+    us-west-1:
+      AMI: ami-015954d5e5548d13b
+    us-west-2:
+      AMI: ami-0cb72367e98845d43
+  AWSRegionAndEnvironmentToInstanceType:
+    ap-northeast-1:
+      Development: t2.small
+      Staging: t2.medium
+      Production: t2.large
+    ap-northeast-2:
+      Development: t2.small
+      Staging: t2.medium
+      Production: t2.large
+    ap-south-1:
+      Development: t2.small
+      Staging: t2.medium
+      Production: t2.large
+    ap-southeast-1:
+      Development: t2.small
+      Staging: t2.medium
+      Production: t2.large
+    ap-southeast-2:
+      Development: t2.small
+      Staging: t2.medium
+      Production: t2.large
+    ap-east-1:
+      Development: t2.small
+      Staging: t2.medium
+      Production: t2.large
+    eu-central-1:
+      Development: t2.small
+      Staging: t2.medium
+      Production: t2.large
+    eu-west-1:
+      Development: t2.small
+      Staging: t2.medium
+      Production: t2.large
+    eu-west-2:
+      Development: t2.small
+      Staging: t2.medium
+      Production: t2.large
+    eu-west-3:
+      Development: t2.small
+      Staging: t2.medium
+      Production: t2.large
+    us-east-1:
+      Development: t2.small
+      Staging: t2.medium
+      Production: t2.large
+    us-east-2:
+      Development: t2.small
+      Staging: t2.medium
+      Production: t2.large
+    us-west-1:
+      Development: t2.small
+      Staging: t2.medium
+      Production: t2.large
+    us-west-2:
+      Development: t2.small
+      Staging: t2.medium
+      Production: t2.large
+
 Resources:
   MyInstance:
     Type: AWS::EC2::Instance
     Properties:
       #AvailabilityZone: us-east-1a
-      ImageId: ami-a4c7edb2
-      InstanceType: t2.micro
+      ImageId:
+        Fn::FindInMap:
+          - AWSRegionToAMI
+          - !Ref AWS::Region
+          - AMI
+      InstanceType:
+        Fn::FindInMap:
+          - AWSRegionAndEnvironmentToInstanceType
+          - !Ref AWS::Region
+          - !Ref Environment
       KeyName: !Ref KeyName
       SecurityGroupIds:
         - !Ref SSHSecurityGroup
         - !Ref ServerSecurityGroup
       SubnetId: !Ref SubnetId
+      Tags:
+        - Key: Name
+          Value:  EC2 Application
+        - Key: Environment
+          Value: !Ref Environment
 
   MyEIP:
     # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-eip.html
     Type: AWS::EC2::EIP
     Properties:
       InstanceId: !Ref MyInstance
+      Tags:
+        - Key: Name
+          Value:  EC2 Application
+        - Key: Environment
+          Value: !Ref Environment
 
   SSHSecurityGroup:
     # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html
