@@ -70,16 +70,14 @@ In the event of a failure in the Single AZ deployment, RDS automatically attempt
 and perform recovery.
 In this scenario, RTO is typically under 30 minutes, RPO - is zero because the data from EBS volume has been restored.
 
-
 The RDS Multi-AZ configuration is the recommended approach for production environments due to its ability to support low RTO (recovery time objective) and RPO (recovery point objective) requirements.
 RTO in such case may be less than 10 minutes. In case of Availability Zone failure, the DNS endpoint will be switched from failed Primary to a Standby instance.
 RPO will be the number of lost queries within timeframe between RDS detecting that AZ is down and switching DNS endpoint.
 If retry is implemented on the application side, PRO is negligible as no queries will be lost and application just keeps retrying until query is succeeded.
 
-
 ## Minimum RTO for a single AZ outage
 
-AZ failures are rare, RTO is under 30 minutes.
+AZ failures are rare, RTO is under 30 minutes. At the minimum it takes around 5 minutes to promote standby instance to a master. 
 
 ## Minimum RTO for a single region outage
 
@@ -87,7 +85,7 @@ Time of Read Replica in healthy region being promoted to a standalone DB cluster
 
 ## Minimum RPO for a single AZ outage
 
-0 minutes, as volume is recovered.
+0 minutes, as volume is recovered from standby instance.
 
 ## Minimum RPO for a single region outage
 
@@ -114,7 +112,7 @@ In the active region:
 In the standby region:
 
 1. Create an EC2 keypair in the region
-2. Launch an Amazon Linux EC2 instance in the standby region. Configure the instance to use the VPC's public subnet and security group ("UDARR-Application").
+2. Launch an Amazon Linux EC2 instance in the standby region. Configure the instance to use the VPC's public subnet and security group ("Application-SG").
 3. SSH to the instance and connect to the read replica database.
 4. Verify if you are not able to insert data into the database but are able to read from the database.
 5. You have now demonstrated that you can only read from the read replica database.
